@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Data;
+using EcoPower_Logistics.Repository;
 
 namespace Controllers
 {
@@ -15,6 +16,7 @@ namespace Controllers
     public class OrdersController : Controller
     {
         private readonly SuperStoreContext _context;
+        OrdersRepository ordersRepository = new OrdersRepository();
 
         public OrdersController(SuperStoreContext context)
         {
@@ -24,21 +26,20 @@ namespace Controllers
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            var superStoreContext = _context.Orders.Include(o => o.Customer);
-            return View(await superStoreContext.ToListAsync());
+            var resluts = ordersRepository.GetAll();
+
+            return View(resluts);
         }
 
         // GET: Orders/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Orders == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var order = await _context.Orders
-                .Include(o => o.Customer)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
+            var order = await ordersRepository.GetOrderByIdAsync(id.Value);
             if (order == null)
             {
                 return NotFound();
@@ -50,7 +51,7 @@ namespace Controllers
         // GET: Orders/Create
         public IActionResult Create()
         {
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "CustomerId", "CustomerId");
+            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId");
             return View();
         }
 
@@ -63,28 +64,27 @@ namespace Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(order);
-                await _context.SaveChangesAsync();
+                await ordersRepository.CreateOrderAsync(order);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "CustomerId", "CustomerId", order.CustomerId);
+            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId", order.CustomerId);
             return View(order);
         }
 
         // GET: Orders/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Orders == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var order = await _context.Orders.FindAsync(id);
+            var order = await ordersRepository.GetByIdAsync(id.Value);
             if (order == null)
             {
                 return NotFound();
             }
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "CustomerId", "CustomerId", order.CustomerId);
+            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId", order.CustomerId);
             return View(order);
         }
 
@@ -104,12 +104,11 @@ namespace Controllers
             {
                 try
                 {
-                    _context.Update(order);
-                    await _context.SaveChangesAsync();
+                    await ordersRepository.UpdateAsync(order);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!OrderExists(order.OrderId))
+                    if (!ordersRepository.OrderExists(order.OrderId))
                     {
                         return NotFound();
                     }
@@ -120,7 +119,7 @@ namespace Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "CustomerId", "CustomerId", order.CustomerId);
+            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId", order.CustomerId);
             return View(order);
         }
 

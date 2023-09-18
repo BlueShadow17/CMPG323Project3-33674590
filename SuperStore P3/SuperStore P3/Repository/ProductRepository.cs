@@ -11,7 +11,7 @@ namespace EcoPower_Logistics.Repository
     {
         private readonly SuperStoreContext _context = new SuperStoreContext();
 
-        //Get all repo!
+        //Get all products repo!
         public IEnumerable<Product> GetAll()
         {
             return _context.Products.ToList();
@@ -23,14 +23,14 @@ namespace EcoPower_Logistics.Repository
             return await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
         }
 
-        //Create repo!
+        //Create product repo!
         public async Task AddProductAsync(Product product)
         {
             _context.Add(product);
             await _context.SaveChangesAsync();
         }
 
-        //Edit repo!
+        //Edit product repo!
         public Product GetProductById(int id)
         {
             return _context.Products.FirstOrDefault(p => p.ProductId == id);
@@ -42,13 +42,13 @@ namespace EcoPower_Logistics.Repository
             await _context.SaveChangesAsync();
         }
 
-        //Exist repo!
+        //Exist product repo!
         public bool ProductExists(int id)
         {
             return _context.Products.Any(p => p.ProductId == id);
         }
 
-        //Delete repo!
+        //Delete product repo!
         public async Task DeleteProductAsync(int id)
         {
             var product = await _context.Products.FindAsync(id);

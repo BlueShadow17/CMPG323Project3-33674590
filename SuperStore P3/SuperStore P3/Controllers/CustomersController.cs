@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Data;
 using Models;
+using EcoPower_Logistics.Repository;
 
 namespace Controllers
 {
@@ -15,6 +16,7 @@ namespace Controllers
     public class CustomersController : Controller
     {
         private readonly SuperStoreContext _context;
+        CustomerRepository customerRepository = new CustomerRepository();
 
         public CustomersController(SuperStoreContext context)
         {
@@ -24,27 +26,26 @@ namespace Controllers
         // GET: Customers
         public async Task<IActionResult> Index()
         {
-            return _context.Customers != null ?
-                        View(await _context.Customers.ToListAsync()) :
-                        Problem("Entity set 'SuperStoreContext.Customers'  is null.");
+            var resluts = customerRepository.GetAll();
+
+            return View(resluts);
         }
 
         // GET: Customers/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(m => m.CustomerId == id);
-            if (customer == null)
+            var results = await customerRepository.GetCustomerByIdAsync(id.Value);
+            if (results == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(results);
         }
 
         // GET: Customers/Create
@@ -62,8 +63,7 @@ namespace Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(customer);
-                await _context.SaveChangesAsync();
+                await customerRepository.AddCustomerAsync(customer);
                 return RedirectToAction(nameof(Index));
             }
             return View(customer);
@@ -72,17 +72,17 @@ namespace Controllers
         // GET: Customers/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
+            var results = customerRepository.GetCustomerById(id.Value);
+            if (results == null)
             {
                 return NotFound();
             }
-            return View(customer);
+            return View(results);
         }
 
         // POST: Customers/Edit/5
@@ -101,12 +101,11 @@ namespace Controllers
             {
                 try
                 {
-                    _context.Update(customer);
-                    await _context.SaveChangesAsync();
+                    await customerRepository.UpdateCustomerAsync(customer);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CustomerExists(customer.CustomerId))
+                    if (!customerRepository.CustomerExists(customer.CustomerId))
                     {
                         return NotFound();
                     }
@@ -123,19 +122,18 @@ namespace Controllers
         // GET: Customers/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Customers == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(m => m.CustomerId == id);
-            if (customer == null)
+            var product = await customerRepository.GetCustomerByIdAsync(id.Value);
+            if (product == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(product);
         }
 
         // POST: Customers/Delete/5
@@ -143,23 +141,18 @@ namespace Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Customers == null)
+            if (!customerRepository.CustomerExists(id))
             {
-                return Problem("Entity set 'SuperStoreContext.Customers'  is null.");
-            }
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer != null)
-            {
-                _context.Customers.Remove(customer);
+                return NotFound();
             }
 
-            await _context.SaveChangesAsync();
+            await customerRepository.DeleteCustomerAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool CustomerExists(int id)
         {
-            return (_context.Customers?.Any(e => e.CustomerId == id)).GetValueOrDefault();
+            return customerRepository.CustomerExists(id);
         }
     }
 }
