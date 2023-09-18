@@ -46,11 +46,6 @@ namespace EcoPower_Logistics.Repository
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
         }
-
-        //Edit orders repo!
-        public async Task<Order> GetByIdAsync(int id)
-        {
-            return await _context.Orders.FindAsync(id);
         }        
 
         public async Task UpdateAsync(Order order)
@@ -58,12 +53,6 @@ namespace EcoPower_Logistics.Repository
             _context.Update(order);
             await _context.SaveChangesAsync();
         }
-
-        //Delete orders repo!
-
-        public bool OrderExists(int id)
-        {
-            return _context.Orders.Any(e => e.OrderId == id);
         }
     }
 }
