@@ -17,6 +17,7 @@ namespace Controllers
     {
         private readonly SuperStoreContext _context;
         OrdersRepository ordersRepository = new OrdersRepository();
+        CustomerRepository customerRepository = new CustomerRepository();
 
         public OrdersController(SuperStoreContext context)
         {
@@ -39,7 +40,7 @@ namespace Controllers
                 return NotFound();
             }
 
-            var order = await ordersRepository.GetOrderByIdAsync(id.Value);
+            var order = await ordersRepository.GetCustomerByIdAsync(id.Value);
             if (order == null)
             {
                 return NotFound();
@@ -51,7 +52,7 @@ namespace Controllers
         // GET: Orders/Create
         public IActionResult Create()
         {
-            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId");
+            ViewData["CustomerId"] = new SelectList(customerRepository.GetAll(), "CustomerId", "CustomerId");
             return View();
         }
 
@@ -62,12 +63,13 @@ namespace Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("OrderId,OrderDate,CustomerId,DeliveryAddress")] Order order)
         {
+            ModelState.Remove("Customer");
             if (ModelState.IsValid)
             {
-                await ordersRepository.CreateOrderAsync(order);
+                await ordersRepository.AddOrderAsync(order);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId", order.CustomerId);
+            ViewData["CustomerId"] = new SelectList(customerRepository.GetAll(), "CustomerId", "CustomerId", order.CustomerId);
             return View(order);
         }
 
@@ -79,12 +81,12 @@ namespace Controllers
                 return NotFound();
             }
 
-            var order = await ordersRepository.GetByIdAsync(id.Value);
+            var order = await ordersRepository.GetCustomerByIdAsync(id.Value);
             if (order == null)
             {
                 return NotFound();
             }
-            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId", order.CustomerId);
+            ViewData["CustomerId"] = new SelectList(customerRepository.GetAll(), "CustomerId", "CustomerId", order.CustomerId);
             return View(order);
         }
 
@@ -100,11 +102,13 @@ namespace Controllers
                 return NotFound();
             }
 
+            ModelState.Remove("Customer");
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await ordersRepository.UpdateAsync(order);
+                    await ordersRepository.UpdateOrderAsync(order);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -119,7 +123,7 @@ namespace Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CustomerId"] = new SelectList(ordersRepository.GetAllCustomers(), "CustomerId", "CustomerId", order.CustomerId);
+            ViewData["CustomerId"] = new SelectList(customerRepository.GetAll(), "CustomerId", "CustomerId", order.CustomerId);
             return View(order);
         }
 
