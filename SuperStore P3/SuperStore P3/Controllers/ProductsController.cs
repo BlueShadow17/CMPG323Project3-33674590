@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Data;
 using Models;
@@ -15,21 +13,18 @@ namespace Controllers
     [Authorize]
     public class ProductsController : Controller
     {
-        private readonly SuperStoreContext _context;
-        ProductRepository productRepository = new ProductRepository();
+        private readonly IProductRepository _productRepository;
 
-
-        public ProductsController(SuperStoreContext context)
+        public ProductsController(SuperStoreContext context, IProductRepository productRepository)
         {
-            _context = context;
+            _productRepository = productRepository;
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var resluts = productRepository.GetAll();
-
-            return View(resluts);
+            var results = _productRepository.GetAll();
+            return View(results);
         }
 
         // GET: Products/Details/5
@@ -40,13 +35,14 @@ namespace Controllers
                 return NotFound();
             }
 
-            var results = await productRepository.GetProductByIdAsync(id.Value);
-            if (results == null)
+            var result = await _productRepository.GetByIdAsync(id.Value);
+
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return View(results);
+            return View(result);
         }
 
         // GET: Products/Create
@@ -56,17 +52,16 @@ namespace Controllers
         }
 
         // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ProductId,ProductName,ProductDescription,UnitsInStock")] Product product)
         {
             if (ModelState.IsValid)
             {
-                await productRepository.AddProductAsync(product);
+                await _productRepository.AddAsync(product);
                 return RedirectToAction(nameof(Index));
             }
+
             return View(product);
         }
 
@@ -78,17 +73,17 @@ namespace Controllers
                 return NotFound();
             }
 
-            var results = productRepository.GetProductById(id.Value);
-            if (results == null)
+            var result = await _productRepository.GetByIdAsync(id.Value);
+
+            if (result == null)
             {
                 return NotFound();
             }
-            return View(results);
+
+            return View(result);
         }
 
         // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,ProductDescription,UnitsInStock")] Product product)
@@ -102,11 +97,11 @@ namespace Controllers
             {
                 try
                 {
-                    await productRepository.UpdateProductAsync(product);
+                    await _productRepository.UpdateAsync(product);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!productRepository.ProductExists(product.ProductId))
+                    if (!_productRepository.EntityExists(product.ProductId))
                     {
                         return NotFound();
                     }
@@ -128,7 +123,8 @@ namespace Controllers
                 return NotFound();
             }
 
-            var product = await productRepository.GetProductByIdAsync(id.Value);
+            var product = await _productRepository.GetByIdAsync(id.Value);
+
             if (product == null)
             {
                 return NotFound();
@@ -142,18 +138,13 @@ namespace Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if(!productRepository.ProductExists(id))
-    {
+            if (!_productRepository.EntityExists(id))
+            {
                 return NotFound();
             }
 
-            await productRepository.DeleteProductAsync(id);
+            await _productRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ProductExists(int id)
-        {
-            return productRepository.ProductExists(id);
         }
     }
 }

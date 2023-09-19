@@ -15,20 +15,18 @@ namespace Controllers
     [Authorize]
     public class CustomersController : Controller
     {
-        private readonly SuperStoreContext _context;
-        CustomerRepository customerRepository = new CustomerRepository();
+        private readonly ICustomerRepository _customerRepository;
 
-        public CustomersController(SuperStoreContext context)
+        public CustomersController(SuperStoreContext context, ICustomerRepository customerRepository)
         {
-            _context = context;
+            _customerRepository = customerRepository;
         }
 
         // GET: Customers
         public async Task<IActionResult> Index()
         {
-            var resluts = customerRepository.GetAll();
-
-            return View(resluts);
+            var results = _customerRepository.GetAll();
+            return View(results);
         }
 
         // GET: Customers/Details/5
@@ -39,7 +37,7 @@ namespace Controllers
                 return NotFound();
             }
 
-            var results = await customerRepository.GetCustomerByIdAsync(id.Value);
+            var results = await _customerRepository.GetByIdAsync(id.Value);
             if (results == null)
             {
                 return NotFound();
@@ -55,15 +53,15 @@ namespace Controllers
         }
 
         // POST: Customers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CustomerId,CustomerTitle,CustomerName,CustomerSurname,CellPhone")] Customer customer)
         {
+            ModelState.Remove("Customer");
+
             if (ModelState.IsValid)
             {
-                await customerRepository.AddCustomerAsync(customer);
+                await _customerRepository.AddAsync(customer);
                 return RedirectToAction(nameof(Index));
             }
             return View(customer);
@@ -77,7 +75,7 @@ namespace Controllers
                 return NotFound();
             }
 
-            var results = customerRepository.GetCustomerById(id.Value);
+            var results = await _customerRepository.GetByIdAsync(id.Value);
             if (results == null)
             {
                 return NotFound();
@@ -86,8 +84,6 @@ namespace Controllers
         }
 
         // POST: Customers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CustomerId,CustomerTitle,CustomerName,CustomerSurname,CellPhone")] Customer customer)
@@ -97,15 +93,17 @@ namespace Controllers
                 return NotFound();
             }
 
+            ModelState.Remove("Customer");
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await customerRepository.UpdateCustomerAsync(customer);
+                    await _customerRepository.UpdateAsync(customer);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!customerRepository.CustomerExists(customer.CustomerId))
+                    if (!_customerRepository.EntityExists(customer.CustomerId))
                     {
                         return NotFound();
                     }
@@ -127,13 +125,13 @@ namespace Controllers
                 return NotFound();
             }
 
-            var product = await customerRepository.GetCustomerByIdAsync(id.Value);
-            if (product == null)
+            var customer = await _customerRepository.GetByIdAsync(id.Value);
+            if (customer == null)
             {
                 return NotFound();
             }
 
-            return View(product);
+            return View(customer);
         }
 
         // POST: Customers/Delete/5
@@ -141,18 +139,13 @@ namespace Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (!customerRepository.CustomerExists(id))
+            if (!_customerRepository.EntityExists(id))
             {
                 return NotFound();
             }
 
-            await customerRepository.DeleteCustomerAsync(id);
+            await _customerRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool CustomerExists(int id)
-        {
-            return customerRepository.CustomerExists(id);
         }
     }
 }
