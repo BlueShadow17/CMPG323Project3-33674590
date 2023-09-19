@@ -7,56 +7,10 @@ using System.Linq;
 
 namespace EcoPower_Logistics.Repository
 {
-    public class ProductRepository
+    public class ProductRepository : GenericRepository<Product>, IProductRepository
     {
-        private readonly SuperStoreContext _context = new SuperStoreContext();
-
-        //Get all products repo!
-        public IEnumerable<Product> GetAll()
+        public ProductRepository(SuperStoreContext context) : base(context)
         {
-            return _context.Products.ToList();
-        }
-         
-        //Get product by detail id repo!
-        public async Task<Product> GetProductByIdAsync(int id)
-        {
-            return await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
-        }
-
-        //Create product repo!
-        public async Task AddProductAsync(Product product)
-        {
-            _context.Add(product);
-            await _context.SaveChangesAsync();
-        }
-
-        //Edit product repo!
-        public Product GetProductById(int id)
-        {
-            return _context.Products.FirstOrDefault(p => p.ProductId == id);
-        }
-
-        public async Task UpdateProductAsync(Product product)
-        {
-            _context.Update(product);
-            await _context.SaveChangesAsync();
-        }
-
-        //Exist product repo!
-        public bool ProductExists(int id)
-        {
-            return _context.Products.Any(p => p.ProductId == id);
-        }
-
-        //Delete product repo!
-        public async Task DeleteProductAsync(int id)
-        {
-            var product = await _context.Products.FindAsync(id);
-            if (product != null)
-            {
-                _context.Products.Remove(product);
-                await _context.SaveChangesAsync();
-            }
         }
     }
 }
