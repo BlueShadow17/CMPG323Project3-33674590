@@ -18,7 +18,7 @@ In this project tha database and code of a web application was given to me. All 
 
 The project link is below:
 
-[link]( https://ecopowerlogistics20230920003952.azurewebsites.net/)
+[Link]( https://ecopowerlogistics20230920003952.azurewebsites.net/)
 
 
 Click below for the Azure profile link:
